@@ -1,20 +1,16 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const { VueLoaderPlugin } = require('vue-loader');
 
 module.exports = {
   entry: path.resolve(__dirname, 'src/main.js'),
   output: {
     path: path.resolve(__dirname, 'dist'),
-    filename: 'child-vue2-level1.js',
-    library: 'childVue2Level1',
-    libraryTarget: 'umd',
-    publicPath: '//localhost:7200/'
+    filename: 'app-vue2.js',
+    publicPath: '/'
   },
   devServer: {
     port: 7200,
-    headers: {
-      'Access-Control-Allow-Origin': '*'
-    },
     historyApiFallback: true
   },
   module: {
@@ -30,18 +26,21 @@ module.exports = {
       },
       {
         test: /\.css$/,
-        use: ['style-loader', 'css-loader']
+        use: ['vue-style-loader', 'css-loader']
       }
     ]
   },
   plugins: [
     new HtmlWebpackPlugin({
       template: path.resolve(__dirname, 'public/index.html')
-    })
+    }),
+    new VueLoaderPlugin()
   ],
-  externals: {
-    vue: 'Vue',
-    'vue-router': 'VueRouter'
+  resolve: {
+    extensions: ['.js', '.vue'],
+    alias: {
+      vue$: 'vue/dist/vue.esm.js'
+    }
   }
 };
 

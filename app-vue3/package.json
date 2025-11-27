@@ -1,5 +1,5 @@
 {
-  "name": "root-main",
+  "name": "app-vue3",
   "version": "1.0.0",
   "private": true,
   "scripts": {
@@ -8,9 +8,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "vue": "^3.4.0",
-    "vue-router": "^4.3.0",
-    "qiankun": "^2.12.0"
+    "vue": "^3.2.47",
+    "element-plus": "^2.8.0"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.0",
