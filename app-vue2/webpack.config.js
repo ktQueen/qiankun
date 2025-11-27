@@ -7,11 +7,17 @@ module.exports = {
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: 'app-vue2.js',
-    publicPath: '/'
+    // 作为 qiankun 子应用时导出 UMD 库
+    library: 'appVue2',
+    libraryTarget: 'umd',
+    publicPath: '//localhost:7200/'
   },
   devServer: {
     port: 7200,
-    historyApiFallback: true
+    historyApiFallback: true,
+    headers: {
+      'Access-Control-Allow-Origin': '*'
+    }
   },
   module: {
     rules: [
