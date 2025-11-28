@@ -1,14 +1,42 @@
 <template>
   <div class="app">
-    <h1>app-vue3 子应用</h1>
-    <p>以后会被挂在 Vue2 系统下面，现在先当独立 Vue3 应用使用。</p>
-    <el-button type="danger">app-vue3 的 Element Plus 按钮</el-button>
+    <nav class="nav">
+      <router-link to="/app-vue2/app-vue3/page1">Page1</router-link>
+      <router-link to="/app-vue2/app-vue3/page2">Page2</router-link>
+      <router-link to="/app-vue2/app-vue3/page3">Page3</router-link>
+    </nav>
+
+    <!-- app-vue3 路由视图 -->
+    <router-view />
   </div>
 </template>
+
+<script>
+export default {
+  name: "AppVue3",
+};
+</script>
 
 <style scoped>
 .app {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   padding: 24px;
+}
+
+.nav {
+  margin-bottom: 24px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #eee;
+}
+
+.nav a {
+  margin-right: 16px;
+  color: #409eff;
+  text-decoration: none;
+}
+
+.nav a.router-link-active {
+  color: #67c23a;
+  font-weight: bold;
 }
 </style>

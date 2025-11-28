@@ -2,10 +2,12 @@ import { createApp } from "vue";
 import ElementPlus from "element-plus";
 import "element-plus/dist/index.css";
 import { registerMicroApps, start, loadMicroApp } from "qiankun";
+import router from "./router";
 import App from "./App.vue";
 
 const app = createApp(App);
 app.use(ElementPlus);
+app.use(router);
 app.mount("#app");
 
 // 注册 app-vue2 子应用
@@ -69,15 +71,15 @@ const unloadAppVue3 = async () => {
   }
 };
 
-// 监听路由变化
-const handleRouteChange = () => {
-  const path = window.location.pathname;
+// 监听 Vue Router 路由变化
+router.afterEach((to) => {
+  const path = to.path;
   if (path.startsWith("/app-vue2/app-vue3")) {
     loadAppVue3();
   } else {
     unloadAppVue3();
   }
-};
+});
 
 // 监听 app-vue2 的事件通知
 window.addEventListener("app-vue2-mounted", () => {
@@ -92,9 +94,10 @@ window.addEventListener("app-vue2-container-ready", () => {
   loadAppVue3();
 });
 
-window.addEventListener("popstate", handleRouteChange);
 // 初始检查
-handleRouteChange();
+if (window.location.pathname.startsWith("/app-vue2/app-vue3")) {
+  loadAppVue3();
+}
 
 // 启动 qiankun
 start({ singular: false });

@@ -6,10 +6,23 @@ module.exports = {
   entry: path.resolve(__dirname, 'src/main.js'),
   output: {
     path: path.resolve(__dirname, 'dist'),
-    filename: 'app-vue3.js',
+    filename: '[name].js',
+    chunkFilename: '[name].[chunkhash].js',
     library: 'appVue3',
     libraryTarget: 'umd',
     publicPath: '//localhost:7400/'
+  },
+  optimization: {
+    splitChunks: {
+      chunks: 'all',
+      cacheGroups: {
+        vendor: {
+          test: /[\\/]node_modules[\\/]/,
+          name: 'vendors',
+          priority: 10,
+        },
+      },
+    },
   },
   devServer: {
     port: 7400,

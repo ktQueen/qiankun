@@ -1,39 +1,52 @@
 <template>
   <div class="app">
-    <h1>app-vue2 子应用</h1>
-    <p>这是一级 Vue2 系统，将来会在它下面挂 app-vue3。</p>
-    <el-button type="primary">app-vue2 的 Element UI 按钮</el-button>
-    <el-button type="success" @click="goAppVue3" style="margin-left: 12px">
-      进入 app-vue3 子应用（第三级）1
-    </el-button>
-    <h3 style="margin-top: 24px">第三级 app-vue3 挂载区域</h3>
-    <div id="nested-app-vue3-container" class="nested-vue3"></div>
+    <nav class="nav">
+      <router-link to="/app-vue2/page1">Page1</router-link>
+      <router-link to="/app-vue2/page2">Page2</router-link>
+      <router-link to="/app-vue2/page3">Page3</router-link>
+      <router-link to="/app-vue2/app-vue3/page1">app-vue3 Page1</router-link>
+    </nav>
+
+    <!-- app-vue2 路由视图 -->
+    <router-view />
+
+    <!-- 第三级 app-vue3 挂载区域 -->
+    <div
+      v-if="showNestedContainer"
+      id="nested-app-vue3-container"
+      class="nested-vue3"
+    ></div>
   </div>
 </template>
 
 <script>
 export default {
   name: "AppVue2",
-  methods: {
-    goAppVue3() {
-      // 修改路径为 /app-vue2/app-vue3
-      window.history.pushState({}, "", "/app-vue2/app-vue3");
-
-      // 如果在主应用里（qiankun 环境），通过事件通知主应用立即挂载 app-vue3
+  computed: {
+    showNestedContainer() {
+      // 当路由是 app-vue3 相关时，显示嵌套容器
+      return this.$route.path.startsWith("/app-vue2/app-vue3");
+    },
+  },
+  watch: {
+    $route(to) {
+      // 路由变化时，如果在主应用里，通知主应用
       if (window.__POWERED_BY_QIANKUN__) {
-        // 触发自定义事件，通知主应用容器已准备好
-        window.dispatchEvent(
-          new CustomEvent("app-vue2-container-ready", {
-            detail: { containerId: "nested-app-vue3-container" },
-          })
-        );
+        if (to.path.startsWith("/app-vue2/app-vue3")) {
+          this.$nextTick(() => {
+            window.dispatchEvent(
+              new CustomEvent("app-vue2-container-ready", {
+                detail: { containerId: "nested-app-vue3-container" },
+              })
+            );
+          });
+        }
       }
     },
   },
   mounted() {
     // 如果在主应用里，挂载完成后通知主应用容器已准备好
     if (window.__POWERED_BY_QIANKUN__) {
-      // 延迟一下，确保 DOM 已渲染
       this.$nextTick(() => {
         window.dispatchEvent(
           new CustomEvent("app-vue2-mounted", {
@@ -51,6 +64,24 @@ export default {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   padding: 24px;
 }
+
+.nav {
+  margin-bottom: 24px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #eee;
+}
+
+.nav a {
+  margin-right: 16px;
+  color: #409eff;
+  text-decoration: none;
+}
+
+.nav a.router-link-active {
+  color: #67c23a;
+  font-weight: bold;
+}
+
 .nested-vue3 {
   margin-top: 12px;
   min-height: 300px;

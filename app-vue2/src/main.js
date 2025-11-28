@@ -1,6 +1,7 @@
 import Vue from "vue";
 import ElementUI from "element-ui";
 import "element-ui/lib/theme-chalk/index.css";
+import router from "./router";
 import App from "./App.vue";
 
 Vue.config.productionTip = false;
@@ -11,6 +12,7 @@ let instance = null;
 function render(props = {}) {
   const { container } = props;
   instance = new Vue({
+    router,
     render: (h) => h(App),
   }).$mount(container ? container.querySelector("#app") : "#app");
 }

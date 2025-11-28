@@ -1,51 +1,30 @@
 <template>
   <div class="app">
-    <h1>main-vue3 主应用</h1>
-    <p>这里现在已经作为 qiankun 基座。</p>
-    <p>下面演示先挂载一个 Vue2 子应用（app-vue2）。</p>
-    <el-button type="primary" @click="goVue2">进入 app-vue2 子应用</el-button>
+    <nav class="nav">
+      <router-link to="/">首页</router-link>
+      <router-link to="/page1">Page1</router-link>
+      <router-link to="/page2">Page2</router-link>
+      <router-link to="/app-vue2/page1">app-vue2 Page1</router-link>
+      <router-link to="/app-vue2/page2">app-vue2 Page2</router-link>
+    </nav>
 
-    <h2 style="margin-top: 24px">子应用挂载容器</h2>
+    <!-- 主应用路由视图 -->
+    <router-view v-if="!isMicroAppRoute" />
+
+    <!-- 子应用挂载容器 -->
     <div id="subapp-container" class="subapp-container"></div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted } from "vue";
+import { computed } from "vue";
+import { useRoute } from "vue-router";
 
-const goVue2 = () => {
-  // 修改浏览器路径为 /app-vue2，触发 qiankun activeRule
-  window.history.pushState({}, "", "/app-vue2");
-};
+const route = useRoute();
 
-// 监听路由变化，确保嵌套容器存在
-const checkNestedContainer = () => {
-  const path = window.location.pathname;
-  if (path.startsWith("/app-vue2/app-vue3")) {
-    // 等待 app-vue2 挂载完成，确保容器存在
-    let attempts = 0;
-    const maxAttempts = 30; // 最多等待 3 秒
-    const interval = setInterval(() => {
-      const container = document.getElementById("nested-app-vue3-container");
-      if (container) {
-        clearInterval(interval);
-      } else if (++attempts >= maxAttempts) {
-        clearInterval(interval);
-        console.warn("嵌套容器未找到，app-vue2 可能还未挂载完成");
-      }
-    }, 100);
-  }
-};
-
-onMounted(() => {
-  // 监听 popstate 事件（浏览器前进/后退）
-  window.addEventListener("popstate", checkNestedContainer);
-  // 初始检查
-  checkNestedContainer();
-});
-
-onUnmounted(() => {
-  window.removeEventListener("popstate", checkNestedContainer);
+// 判断当前路由是否是子应用路由
+const isMicroAppRoute = computed(() => {
+  return route.path.startsWith("/app-vue2");
 });
 </script>
 
@@ -53,6 +32,23 @@ onUnmounted(() => {
 .app {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   padding: 24px;
+}
+
+.nav {
+  margin-bottom: 24px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #eee;
+}
+
+.nav a {
+  margin-right: 16px;
+  color: #409eff;
+  text-decoration: none;
+}
+
+.nav a.router-link-active {
+  color: #67c23a;
+  font-weight: bold;
 }
 
 .subapp-container {
