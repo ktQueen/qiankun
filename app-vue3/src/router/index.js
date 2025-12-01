@@ -1,34 +1,35 @@
-import { createRouter, createWebHistory } from 'vue-router';
+import { createRouter, createWebHistory } from "vue-router";
 
+// app-vue3 使用 hash 路由，完全独立于外层 URL
+// 无论是在 main/app2 里还是独立运行，自己的路由都控制在 # 后面
 const routes = [
   {
-    path: '/app-vue2/app-vue3',
-    redirect: '/app-vue2/app-vue3/page1', // 默认跳转到 page1
+    path: "/",
+    redirect: "/page1",
   },
   {
-    path: '/app-vue2/app-vue3/page1',
-    name: 'Page1',
-    // 路由懒加载：按需加载页面组件（主应用和 app-vue2 都使用）
-    component: () => import(/* webpackChunkName: "page1" */ '../views/Page1.vue'),
+    path: "/page1",
+    name: "Page1",
+    component: () =>
+      import(/* webpackChunkName: "page1" */ "../views/Page1.vue"),
   },
   {
-    path: '/app-vue2/app-vue3/page2',
-    name: 'Page2',
-    // 路由懒加载：按需加载页面组件（主应用不使用，但独立运行时需要）
-    component: () => import(/* webpackChunkName: "page2" */ '../views/Page2.vue'),
+    path: "/page2",
+    name: "Page2",
+    component: () =>
+      import(/* webpackChunkName: "page2" */ "../views/Page2.vue"),
   },
   {
-    path: '/app-vue2/app-vue3/page3',
-    name: 'Page3',
-    // 路由懒加载：按需加载页面组件（主应用不使用，但独立运行时需要）
-    component: () => import(/* webpackChunkName: "page3" */ '../views/Page3.vue'),
+    path: "/page3",
+    name: "Page3",
+    component: () =>
+      import(/* webpackChunkName: "page3" */ "../views/Page3.vue"),
   },
 ];
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHistory("/app-vue3/"),
   routes,
 });
 
 export default router;
-

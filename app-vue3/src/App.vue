@@ -1,9 +1,10 @@
 <template>
   <div class="app">
-    <nav class="nav">
-      <router-link to="/app-vue2/app-vue3/page1">Page1</router-link>
-      <router-link to="/app-vue2/app-vue3/page2">Page2</router-link>
-      <router-link to="/app-vue2/app-vue3/page3">Page3</router-link>
+    <!-- 在 qiankun 环境中不显示内部导航，只展示页面内容 -->
+    <nav class="nav" v-if="!isQiankun">
+      <router-link to="/page1">Page1</router-link>
+      <router-link to="/page2">Page2</router-link>
+      <router-link to="/page3">Page3</router-link>
     </nav>
 
     <!-- app-vue3 路由视图 -->
@@ -14,6 +15,13 @@
 <script>
 export default {
   name: "AppVue3",
+  computed: {
+    isQiankun() {
+      // 在 qiankun 环境中由主应用控制导航
+      // eslint-disable-next-line no-underscore-dangle
+      return !!window.__POWERED_BY_QIANKUN__;
+    },
+  },
 };
 </script>
 

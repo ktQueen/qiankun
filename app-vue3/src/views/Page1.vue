@@ -7,13 +7,23 @@
 </template>
 
 <script setup>
-import { useRouter } from 'vue-router';
+import { useRouter } from "vue-router";
+import { onMounted } from "vue";
 
 const router = useRouter();
 
 const goToPage2 = () => {
-  router.push('/app-vue2/app-vue3/page2');
+  router.push("/page2");
 };
+
+onMounted(() => {
+  // 调试用：确认 Page1 组件是否真正渲染
+  // eslint-disable-next-line no-console
+  console.log(
+    "[app-vue3] Page1 mounted, current route:",
+    router.currentRoute.value.fullPath
+  );
+});
 </script>
 
 <style scoped>
@@ -21,4 +31,3 @@ const goToPage2 = () => {
   padding: 24px;
 }
 </style>
-

@@ -7,12 +7,12 @@
 </template>
 
 <script setup>
-import { useRouter } from 'vue-router';
+import { useRouter } from "vue-router";
 
 const router = useRouter();
 
 const goBack = () => {
-  router.push('/app-vue2/app-vue3/page1');
+  router.push("/page1");
 };
 </script>
 
@@ -21,4 +21,3 @@ const goBack = () => {
   padding: 24px;
 }
 </style>
-
