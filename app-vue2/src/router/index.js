@@ -1,49 +1,28 @@
 import Vue from "vue";
 import VueRouter from "vue-router";
+import Page1 from "../views/Page1.vue";
+import Page2 from "../views/Page2.vue";
+import Page3 from "../views/Page3.vue";
 
 Vue.use(VueRouter);
 
+// 在 main 中 base = '/app-vue2'；独立时 base = '/'
+// eslint-disable-next-line no-underscore-dangle
+const base = window.__POWERED_BY_QIANKUN__ ? "/app-vue2" : "/";
+
 const routes = [
-  {
-    path: "/app-vue2",
-    redirect: "/app-vue2/page1", // 默认跳转到 page1
-  },
-  {
-    path: "/app-vue2/page1",
-    name: "Page1",
-    // 路由懒加载：按需加载页面组件
-    component: () =>
-      import(/* webpackChunkName: "page1" */ "../views/Page1.vue"),
-  },
-  {
-    path: "/app-vue2/page2",
-    name: "Page2",
-    // 路由懒加载：按需加载页面组件
-    component: () =>
-      import(/* webpackChunkName: "page2" */ "../views/Page2.vue"),
-  },
-  {
-    path: "/app-vue2/page3",
-    name: "Page3",
-    // 路由懒加载：按需加载页面组件（主应用不使用，但独立运行时需要）
-    component: () =>
-      import(/* webpackChunkName: "page3" */ "../views/Page3.vue"),
-  },
-  // app-vue3 的路由（app-vue2 只使用 page1）
-  {
-    path: "/app-vue2/app-vue3",
-    redirect: "/app-vue2/app-vue3/page1", // 默认跳转到 page1
-  },
-  {
-    path: "/app-vue2/app-vue3/page1",
-    name: "AppVue3Page1",
-    meta: { microApp: "app-vue3" },
-  },
+  { path: "/", redirect: "/page1" },
+  { path: "/page1", component: Page1 },
+  { path: "/page2", component: Page2 },
+  { path: "/page3", component: Page3 },
+  // 用于嵌套 app-vue3 的壳路由：
+  // main 中完整路径为 /app-vue2/app-vue3，独立时为 /app-vue3
+  { path: "/app-vue3", component: Page1 },
 ];
 
 const router = new VueRouter({
   mode: "history",
-  base: window.__POWERED_BY_QIANKUN__ ? "/app-vue2" : "/",
+  base,
   routes,
 });
 

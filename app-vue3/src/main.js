@@ -8,16 +8,7 @@ let app = null;
 
 function render(props = {}) {
   const { container } = props;
-
-  // 计算挂载点：
-  // - 在 qiankun 环境中：挂到外层传入的 container 下
-  // - 独立运行时：挂到 document.getElementById('app')
-  let mountPoint;
-  if (container) {
-    mountPoint = container;
-  } else {
-    mountPoint = document.getElementById("app");
-  }
+  const mountPoint = container || document.getElementById("app");
 
   if (!mountPoint) {
     // eslint-disable-next-line no-console
@@ -55,7 +46,7 @@ export async function unmount() {
   }
 }
 
-// 独立运行时（不在 qiankun 里）直接挂载
+// 独立运行时直接挂载
 // eslint-disable-next-line no-underscore-dangle
 if (!window.__POWERED_BY_QIANKUN__) {
   render();

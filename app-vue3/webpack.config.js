@@ -7,37 +7,16 @@ module.exports = {
   output: {
     path: path.resolve(__dirname, "dist"),
     filename: "[name].js",
-    chunkFilename: "[name].[chunkhash].js",
     library: "appVue3",
     libraryTarget: "umd",
     publicPath: "//localhost:7400/",
-  },
-  optimization: {
-    splitChunks: {
-      chunks: "all",
-      cacheGroups: {
-        vendor: {
-          test: /[\\/]node_modules[\\/]/,
-          name: "vendors",
-          priority: 10,
-        },
-      },
-    },
   },
   devServer: {
     port: 7400,
     historyApiFallback: true,
     headers: {
       "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
-      "Access-Control-Allow-Headers":
-        "X-Requested-With, content-type, Authorization",
     },
-    // 完全禁用客户端功能，避免跨域环境下的 Script error
-    client: false,
-    // 禁用热更新，避免跨域问题
-    hot: false,
-    liveReload: false,
   },
   module: {
     rules: [
@@ -58,7 +37,7 @@ module.exports = {
   },
   plugins: [
     new HtmlWebpackPlugin({
-      template: path.resolve(__dirname, "public/index.html"),
+      template: path.resolve(__dirname, "index.html"),
     }),
     new VueLoaderPlugin(),
   ],

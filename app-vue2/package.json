@@ -10,7 +10,8 @@
     "core-js": "^3.37.0",
     "vue": "^2.7.16",
     "vue-router": "^3.6.5",
-    "element-ui": "^2.15.14"
+    "element-ui": "^2.15.14",
+    "qiankun": "2.10.16"
   },
   "devDependencies": {
     "@babel/core": "^7.26.0",
@@ -26,3 +27,5 @@
     "css-loader": "^6.10.0"
   }
 }
+
+

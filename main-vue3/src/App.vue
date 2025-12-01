@@ -6,12 +6,13 @@
       <router-link to="/page2">Page2</router-link>
       <router-link to="/app-vue2/page1">app-vue2 Page1</router-link>
       <router-link to="/app-vue2/page2">app-vue2 Page2</router-link>
+      <router-link to="/app-vue2/app-vue3">app-vue3 Page1</router-link>
     </nav>
 
-    <!-- 主应用路由视图 -->
-    <router-view v-if="!isMicroAppRoute" />
+    <!-- 主应用自己的页面 -->
+    <router-view v-if="!isMicroRoute" />
 
-    <!-- 子应用挂载容器 -->
+    <!-- 子应用容器：app-vue2 会挂载到这里 -->
     <div id="subapp-container" class="subapp-container"></div>
   </div>
 </template>
@@ -22,10 +23,8 @@ import { useRoute } from "vue-router";
 
 const route = useRoute();
 
-// 判断当前路由是否是子应用路由
-const isMicroAppRoute = computed(() => {
-  return route.path.startsWith("/app-vue2");
-});
+// 以 /app-vue2 开头的路由都交给子应用渲染
+const isMicroRoute = computed(() => route.path.startsWith("/app-vue2"));
 </script>
 
 <style scoped>
@@ -35,27 +34,28 @@ const isMicroAppRoute = computed(() => {
 }
 
 .nav {
-  margin-bottom: 24px;
-  padding-bottom: 12px;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
   border-bottom: 1px solid #eee;
 }
 
 .nav a {
   margin-right: 16px;
-  color: #409eff;
   text-decoration: none;
+  color: #409eff;
 }
 
 .nav a.router-link-active {
-  color: #67c23a;
   font-weight: bold;
+  color: #67c23a;
 }
 
 .subapp-container {
-  margin-top: 12px;
+  margin-top: 16px;
   min-height: 300px;
   border: 1px dashed #bbb;
   border-radius: 4px;
-  padding: 16px;
 }
 </style>
+
+

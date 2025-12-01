@@ -1,6 +1,7 @@
 import Vue from "vue";
 import ElementUI from "element-ui";
 import "element-ui/lib/theme-chalk/index.css";
+import { loadMicroApp, start } from "qiankun";
 import router from "./router";
 import App from "./App.vue";
 
@@ -19,10 +20,12 @@ function render(props = {}) {
 
 // qiankun 生命周期
 export async function bootstrap() {
+  // eslint-disable-next-line no-console
   console.log("[app-vue2] bootstraped");
 }
 
 export async function mount(props) {
+  // eslint-disable-next-line no-console
   console.log("[app-vue2] mount with props", props);
   render(props);
 }
@@ -35,48 +38,48 @@ export async function unmount() {
   }
 }
 
-// 独立运行时直接挂载，并用 qiankun 嵌套 app-vue3
+// 独立运行时：自己启动，并在 /app-vue3 路由下嵌套 app-vue3
 // eslint-disable-next-line no-underscore-dangle
 if (!window.__POWERED_BY_QIANKUN__) {
   render();
-  // 独立运行时，动态加载 qiankun（通过 CDN），然后挂载 app-vue3
-  // 这样 package.json 里不需要 qiankun 依赖，保持代码干净
-  loadQiankunFromCDN().then(({ registerMicroApps, start }) => {
-    registerMicroApps([
-      {
-        name: "app-vue3",
-        entry: "//localhost:7400",
-        container: "#nested-app-vue3-container",
-        activeRule: () => true, // 独立运行时始终激活
-      },
-    ]);
-    start({ singular: false });
-  });
-}
 
-// 从 CDN 动态加载 qiankun（只在独立运行时使用）
-function loadQiankunFromCDN() {
-  return new Promise((resolve, reject) => {
-    // 如果已经加载过，直接使用
-    if (window.qiankun && window.qiankun.registerMicroApps) {
-      resolve(window.qiankun);
+  let appVue3Instance = null;
+
+  start({ singular: false });
+
+  const mountAppVue3 = () => {
+    const container = document.getElementById("nested-app-vue3-container");
+    if (!container) {
+      // eslint-disable-next-line no-console
+      console.warn("[app-vue2] app-vue3 容器未准备好");
       return;
     }
+    if (appVue3Instance) return;
 
-    // 动态加载 qiankun CDN
-    const script = document.createElement("script");
-    script.src =
-      "https://cdn.jsdelivr.net/npm/qiankun@2.10.16/dist/index.umd.min.js";
-    script.onload = () => {
-      if (window.qiankun && window.qiankun.registerMicroApps) {
-        resolve(window.qiankun);
-      } else {
-        reject(new Error("qiankun 加载失败"));
-      }
-    };
-    script.onerror = () => {
-      reject(new Error("qiankun CDN 加载失败"));
-    };
-    document.head.appendChild(script);
+    appVue3Instance = loadMicroApp({
+      name: "app-vue3",
+      entry: "//localhost:7400",
+      container: "#nested-app-vue3-container",
+    });
+  };
+
+  const unmountAppVue3 = () => {
+    if (appVue3Instance) {
+      appVue3Instance.unmount().then(() => {
+        appVue3Instance = null;
+      });
+    }
+  };
+
+  router.afterEach((to) => {
+    if (to.path === "/app-vue3") {
+      mountAppVue3();
+    } else {
+      unmountAppVue3();
+    }
   });
+
+  if (router.currentRoute.path === "/app-vue3") {
+    mountAppVue3();
+  }
 }
