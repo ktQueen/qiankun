@@ -6,7 +6,7 @@
       <router-link to="/page2">Page2</router-link>
       <router-link to="/app-vue2/page1">app-vue2 Page1</router-link>
       <router-link to="/app-vue2/page2">app-vue2 Page2</router-link>
-      <router-link to="/app-vue2/app-vue3">app-vue3 Page1</router-link>
+      <router-link to="/app-vue2/app-vue3/page1">app-vue3 Page1</router-link>
     </nav>
 
     <!-- 主应用自己的页面 -->
@@ -57,5 +57,3 @@ const isMicroRoute = computed(() => route.path.startsWith("/app-vue2"));
   border-radius: 4px;
 }
 </style>
-
-

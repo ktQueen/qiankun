@@ -29,29 +29,42 @@ export default {
     },
     showNestedContainer() {
       const path = this.$route.path;
-      // 独立运行：/app-vue3；在 main 中：/app-vue2/app-vue3
-      if (this.isQiankun) {
-        return window.location.pathname.startsWith("/app-vue2/app-vue3");
-      }
-      return path === "/app-vue3";
-    }
+      // 独立运行：/app-vue2/app-vue3；在 main 中：/main-vue3/app-vue2/app-vue3
+      // 因为 base 已经处理了前缀，所以这里只需要判断相对路径
+      return path.startsWith("/app-vue3");
+    },
   },
   watch: {
     showNestedContainer(val) {
       if (this.isQiankun && val) {
         this.$nextTick(() => {
-          const container = document.getElementById("nested-app-vue3-container");
+          const container = document.getElementById(
+            "nested-app-vue3-container"
+          );
           if (container) {
             window.dispatchEvent(
               new CustomEvent("app-vue2-container-ready", {
-                detail: { containerId: "nested-app-vue3-container" }
+                detail: { containerId: "nested-app-vue3-container" },
               })
             );
           }
         });
       }
+    },
+  },
+  mounted() {
+    // 首次进入时如果就是 /app-vue2/app-vue3，需要主动通知一次
+    if (this.isQiankun && this.showNestedContainer) {
+      const container = document.getElementById("nested-app-vue3-container");
+      if (container) {
+        window.dispatchEvent(
+          new CustomEvent("app-vue2-container-ready", {
+            detail: { containerId: "nested-app-vue3-container" },
+          })
+        );
+      }
     }
-  }
+  },
 };
 </script>
 
@@ -81,5 +94,3 @@ export default {
   border-radius: 4px;
 }
 </style>
-
-

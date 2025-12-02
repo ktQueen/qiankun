@@ -47,11 +47,16 @@ if (!window.__POWERED_BY_QIANKUN__) {
 
   start({ singular: false });
 
-  const mountAppVue3 = () => {
+  const mountAppVue3 = (attempt = 0) => {
     const container = document.getElementById("nested-app-vue3-container");
     if (!container) {
-      // eslint-disable-next-line no-console
-      console.warn("[app-vue2] app-vue3 容器未准备好");
+      if (attempt < 20) {
+        // 等待 DOM 渲染完成后再重试
+        setTimeout(() => mountAppVue3(attempt + 1), 50);
+      } else {
+        // eslint-disable-next-line no-console
+        console.warn("[app-vue2] app-vue3 容器始终未准备好");
+      }
       return;
     }
     if (appVue3Instance) return;
@@ -72,14 +77,15 @@ if (!window.__POWERED_BY_QIANKUN__) {
   };
 
   router.afterEach((to) => {
-    if (to.path === "/app-vue3") {
+    // 独立运行时：/app-vue3 或 /app-vue3/xxx 都视为需要挂载 app3
+    if (to.path.startsWith("/app-vue3")) {
       mountAppVue3();
     } else {
       unmountAppVue3();
     }
   });
 
-  if (router.currentRoute.path === "/app-vue3") {
+  if (router.currentRoute.path.startsWith("/app-vue3")) {
     mountAppVue3();
   }
 }

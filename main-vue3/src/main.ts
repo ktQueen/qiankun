@@ -16,7 +16,8 @@ registerMicroApps([
     name: "app-vue2",
     entry: "//localhost:7200",
     container: "#subapp-container",
-    activeRule: (location) => location.pathname.startsWith("/app-vue2"),
+    activeRule: (location) =>
+      location.pathname.startsWith("/main-vue3/app-vue2"),
   },
 ]);
 
@@ -57,11 +58,9 @@ router.afterEach((to) => {
 
 // app-vue2 通知容器已准备好时，如果当前是 app3 路由则挂载
 window.addEventListener("app-vue2-container-ready", () => {
-  if (window.location.pathname.startsWith("/app-vue2/app-vue3")) {
+  if (window.location.pathname.startsWith("/main-vue3/app-vue2/app-vue3")) {
     mountAppVue3();
   }
 });
 
 start({ singular: false });
-
-

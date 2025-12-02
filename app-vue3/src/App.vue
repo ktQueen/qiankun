@@ -1,10 +1,11 @@
 <template>
   <div class="app">
     <nav class="nav">
-      <router-link to="/page1">Page1</router-link>
-      <router-link to="/page2">Page2</router-link>
-      <router-link to="/page3">Page3</router-link>
+      <router-link to="/page1">Page3-1</router-link>
+      <router-link to="/page2">Page3-2</router-link>
+      <router-link to="/page3">Page3-3</router-link>
     </nav>
+
     <router-view />
   </div>
 </template>
