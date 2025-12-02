@@ -53,20 +53,19 @@ export async function unmount() {
 if (!window.__POWERED_BY_QIANKUN__) {
   render();
 
-  start({ singular: false });
-
   let appVue3Instance = null;
 
-  // 挂载 app-vue3
+  start({ singular: false });
+
   const mountAppVue3 = async () => {
     if (appVue3Instance) return;
 
     try {
-      // 等待容器准备就绪
+      // 使用工具函数等待容器准备就绪（包括可见性检查）
       await waitForContainer("#nested-app-vue3-container", {
         timeout: 5000,
         useObserver: true,
-        waitForVisible: true,
+        waitForVisible: true, // 等待容器可见（因为使用了 v-if 条件渲染）
       });
 
       appVue3Instance = loadMicroApp({
@@ -74,7 +73,9 @@ if (!window.__POWERED_BY_QIANKUN__) {
         entry: "//localhost:7400",
         container: "#nested-app-vue3-container",
         props: {
+          // 传递路由 base 配置给 app-vue3（独立运行时）
           routerBase: "/app-vue2/app-vue3",
+          // 传递父应用标识，用于更精确的 base 判断
           parentApp: "app-vue2",
         },
       });
@@ -84,22 +85,16 @@ if (!window.__POWERED_BY_QIANKUN__) {
     }
   };
 
-  // 卸载 app-vue3
-  const unmountAppVue3 = async () => {
+  const unmountAppVue3 = () => {
     if (appVue3Instance) {
-      try {
-        await appVue3Instance.unmount();
+      appVue3Instance.unmount().then(() => {
         appVue3Instance = null;
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.warn("[app-vue2] app-vue3 卸载失败:", error);
-        appVue3Instance = null;
-      }
+      });
     }
   };
 
-  // 路由监听：在 /app-vue3 路由下挂载 app3
   router.afterEach((to) => {
+    // 独立运行时：/app-vue3 或 /app-vue3/xxx 都视为需要挂载 app3
     if (to.path.startsWith("/app-vue3")) {
       mountAppVue3();
     } else {
@@ -107,7 +102,6 @@ if (!window.__POWERED_BY_QIANKUN__) {
     }
   });
 
-  // 检查初始路由
   if (router.currentRoute.path.startsWith("/app-vue3")) {
     mountAppVue3();
   }
