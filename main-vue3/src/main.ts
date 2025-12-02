@@ -15,42 +15,46 @@ app.mount("#app");
 // app-vue3 实例管理
 let appVue3Instance: MicroApp | null = null;
 
-// app-vue3 容器准备就绪的回调函数（简化版：使用容器管理器统一管理）
+// app-vue3 容器准备就绪的回调函数（简化版）
+// 当 app-vue2 通知容器已准备好时，如果路由匹配则挂载 app-vue3
 const handleAppVue3ContainerReady = async (containerId: string) => {
-  if (containerId === "nested-app-vue3-container") {
-    // 检查当前路由是否需要挂载 app-vue3
-    if (window.location.pathname.startsWith("/main-vue3/app-vue2/app-vue3")) {
-      // 如果已经挂载，直接返回
-      if (appVue3Instance) {
-        return;
-      }
+  // 只处理目标容器
+  if (containerId !== "nested-app-vue3-container") {
+    return;
+  }
 
-      try {
-        // 使用容器管理器等待容器（统一管理，避免重复等待）
-        await containerManager.waitForContainer({
-          selector: "#nested-app-vue3-container",
-          options: {
-            timeout: 3000,
-            useObserver: true,
-            waitForVisible: true,
-          },
-        });
+  // 检查路由是否需要挂载 app-vue3
+  const shouldMount = window.location.pathname.startsWith(
+    "/main-vue3/app-vue2/app-vue3"
+  );
+  if (!shouldMount || appVue3Instance) {
+    return;
+  }
 
-        // 容器准备好后，直接挂载
-        appVue3Instance = loadMicroApp({
-          name: "app-vue3",
-          entry: "//localhost:7400",
-          container: "#nested-app-vue3-container",
-          props: {
-            routerBase: "/main-vue3/app-vue2/app-vue3",
-            parentApp: "main-vue3",
-          } as QiankunProps,
-        });
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.warn("[main-vue3] app-vue3 容器等待失败:", error);
-      }
-    }
+  try {
+    // 使用容器管理器等待容器（统一管理，避免重复等待）
+    await containerManager.waitForContainer({
+      selector: "#nested-app-vue3-container",
+      options: {
+        timeout: 3000,
+        useObserver: true,
+        waitForVisible: true,
+      },
+    });
+
+    // 容器准备好后，直接挂载
+    appVue3Instance = loadMicroApp({
+      name: "app-vue3",
+      entry: "//localhost:7400",
+      container: "#nested-app-vue3-container",
+      props: {
+        routerBase: "/main-vue3/app-vue2/app-vue3",
+        parentApp: "main-vue3",
+      } as QiankunProps,
+    });
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.warn("[main-vue3] app-vue3 容器等待失败:", error);
   }
 };
 

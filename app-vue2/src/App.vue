@@ -11,9 +11,11 @@
     <router-view />
 
     <!-- app-vue3 的容器 -->
+    <!-- 使用 ref 回调直接获取容器元素，简化通知逻辑 -->
     <div
       v-if="showNestedContainer"
       id="nested-app-vue3-container"
+      ref="nestedContainer"
       class="nested-vue3"
     ></div>
   </div>
@@ -42,42 +44,24 @@ export default {
     },
   },
   watch: {
+    // 监听容器显示状态：当容器需要显示时，通知主应用
     showNestedContainer(val) {
-      if (this.isQiankun && val) {
+      if (this.isQiankun && val && this.onContainerReady) {
         // 容器显示时，等待 DOM 更新后通知
+        // v-if 会确保容器被渲染，$nextTick 确保 DOM 已更新
         this.$nextTick(() => {
-          this.notifyContainerReady();
+          this.onContainerReady("nested-app-vue3-container");
         });
       }
     },
   },
   mounted() {
-    // 首次进入时如果就是 /app-vue2/app-vue3，需要主动通知一次
-    if (this.isQiankun && this.showNestedContainer) {
+    // 首次进入时如果容器已显示，需要主动通知一次
+    if (this.isQiankun && this.showNestedContainer && this.onContainerReady) {
       this.$nextTick(() => {
-        this.notifyContainerReady();
+        this.onContainerReady("nested-app-vue3-container");
       });
     }
-  },
-  methods: {
-    // 通知容器已准备好（简化版：直接查找容器并通知，不重复等待）
-    // 注意：独立运行时不需要这个通知，因为 app-vue2 的 main.js 通过 router.afterEach 直接处理
-    notifyContainerReady() {
-      if (
-        !this.onContainerReady ||
-        typeof this.onContainerReady !== "function"
-      ) {
-        return;
-      }
-
-      // 直接查找容器元素（容器已经通过 v-if 渲染，只需要等待 DOM 更新）
-      const container = document.getElementById("nested-app-vue3-container");
-      if (container) {
-        // 容器已存在，直接通知主应用
-        // 主应用会使用容器管理器统一等待容器可见
-        this.onContainerReady("nested-app-vue3-container");
-      }
-    },
   },
 };
 </script>
