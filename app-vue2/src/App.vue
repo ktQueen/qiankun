@@ -20,6 +20,8 @@
 </template>
 
 <script>
+import { waitForContainer } from "./utils/container";
+
 export default {
   name: "AppVue2",
   props: {
@@ -41,12 +43,28 @@ export default {
       return path.startsWith("/app-vue3");
     },
   },
+  data() {
+    return {
+      // 防抖：避免重复触发
+      notifyTimer: null,
+      // 标记是否已通知过（避免重复通知）
+      hasNotified: false,
+    };
+  },
   watch: {
     showNestedContainer(val) {
       if (this.isQiankun && val) {
-        this.$nextTick(() => {
+        // 清除之前的定时器
+        if (this.notifyTimer) {
+          clearTimeout(this.notifyTimer);
+        }
+        // 使用防抖，等待 DOM 更新完成
+        this.notifyTimer = setTimeout(() => {
           this.notifyContainerReady();
-        });
+        }, 100);
+      } else if (!val) {
+        // 容器隐藏时重置标记
+        this.hasNotified = false;
       }
     },
   },
@@ -54,22 +72,49 @@ export default {
     // 首次进入时如果就是 /app-vue2/app-vue3，需要主动通知一次
     if (this.isQiankun && this.showNestedContainer) {
       this.$nextTick(() => {
-        this.notifyContainerReady();
+        // 延迟一点确保 DOM 完全渲染
+        setTimeout(() => {
+          this.notifyContainerReady();
+        }, 100);
       });
+    }
+  },
+  beforeDestroy() {
+    // 清理定时器
+    if (this.notifyTimer) {
+      clearTimeout(this.notifyTimer);
     }
   },
   methods: {
     // 通知容器已准备好（使用 props 回调替代 CustomEvent）
     // 注意：独立运行时不需要这个通知，因为 app-vue2 的 main.js 通过 router.afterEach 直接处理
-    notifyContainerReady() {
-      const container = document.getElementById("nested-app-vue3-container");
+    async notifyContainerReady() {
+      // 如果已经通知过且容器仍然显示，跳过
+      if (this.hasNotified && this.showNestedContainer) {
+        return;
+      }
+
       if (
-        container &&
-        this.onContainerReady &&
-        typeof this.onContainerReady === "function"
+        !this.onContainerReady ||
+        typeof this.onContainerReady !== "function"
       ) {
-        // 在 main 中运行时，通过 props 回调通知主应用
+        return;
+      }
+
+      try {
+        // 使用工具函数等待容器真正准备好（包括可见性检查）
+        await waitForContainer("#nested-app-vue3-container", {
+          timeout: 3000,
+          useObserver: true,
+          waitForVisible: true, // 等待容器可见
+        });
+
+        // 容器已准备好，通知主应用
         this.onContainerReady("nested-app-vue3-container");
+        this.hasNotified = true;
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.warn("[app-vue2] 容器等待超时:", error);
       }
     },
   },

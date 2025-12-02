@@ -64,10 +64,11 @@ if (!window.__POWERED_BY_QIANKUN__) {
     if (appVue3Instance) return;
 
     try {
-      // 使用工具函数等待容器准备就绪
+      // 使用工具函数等待容器准备就绪（包括可见性检查）
       await waitForContainer("#nested-app-vue3-container", {
         timeout: 5000,
         useObserver: true,
+        waitForVisible: true, // 等待容器可见（因为使用了 v-if 条件渲染）
       });
 
       appVue3Instance = loadMicroApp({
