@@ -4,7 +4,7 @@ import "element-plus/dist/index.css";
 import { registerMicroApps, start, loadMicroApp, MicroApp } from "qiankun";
 import router from "./router";
 import App from "./App.vue";
-import { waitForContainer } from "./utils/container";
+import { containerManager } from "./utils/container-manager";
 import type { QiankunProps } from "./types/qiankun";
 
 const app = createApp(App);
@@ -12,21 +12,60 @@ app.use(ElementPlus);
 app.use(router);
 app.mount("#app");
 
-// app-vue3 容器准备就绪的回调函数（带防抖）
-let mountTimer: ReturnType<typeof setTimeout> | null = null;
+// app-vue3 实例管理
+let appVue3Instance: MicroApp | null = null;
 
-const handleAppVue3ContainerReady = (containerId: string) => {
+// app-vue3 容器准备就绪的回调函数（简化版：使用容器管理器统一管理）
+const handleAppVue3ContainerReady = async (containerId: string) => {
   if (containerId === "nested-app-vue3-container") {
     // 检查当前路由是否需要挂载 app-vue3
     if (window.location.pathname.startsWith("/main-vue3/app-vue2/app-vue3")) {
-      // 防抖：避免重复触发
-      if (mountTimer) {
-        clearTimeout(mountTimer);
+      // 如果已经挂载，直接返回
+      if (appVue3Instance) {
+        return;
       }
-      mountTimer = setTimeout(() => {
-        mountAppVue3();
-        mountTimer = null;
-      }, 50);
+
+      try {
+        // 使用容器管理器等待容器（统一管理，避免重复等待）
+        await containerManager.waitForContainer({
+          selector: "#nested-app-vue3-container",
+          options: {
+            timeout: 3000,
+            useObserver: true,
+            waitForVisible: true,
+          },
+        });
+
+        // 容器准备好后，直接挂载
+        appVue3Instance = loadMicroApp({
+          name: "app-vue3",
+          entry: "//localhost:7400",
+          container: "#nested-app-vue3-container",
+          props: {
+            routerBase: "/main-vue3/app-vue2/app-vue3",
+            parentApp: "main-vue3",
+          } as QiankunProps,
+        });
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.warn("[main-vue3] app-vue3 容器等待失败:", error);
+      }
+    }
+  }
+};
+
+// 卸载 app-vue3
+const unmountAppVue3 = async () => {
+  if (appVue3Instance) {
+    try {
+      await appVue3Instance.unmount();
+      appVue3Instance = null;
+      // 清除容器缓存
+      containerManager.clearContainer("#nested-app-vue3-container");
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.warn("[main-vue3] app-vue3 卸载失败:", error);
+      appVue3Instance = null;
     }
   }
 };
@@ -50,47 +89,7 @@ registerMicroApps([
   },
 ]);
 
-// app-vue3 挂载在 app-vue2 内部容器中
-let appVue3Instance: MicroApp | null = null;
-
-const mountAppVue3 = async () => {
-  if (appVue3Instance) return;
-
-  try {
-    // 使用工具函数等待容器准备就绪（容器已经在回调时确认存在，这里做二次确认）
-    // 由于 app-vue2 已经通过 waitForContainer 确认容器可见，这里可以快速检查
-    const container = await waitForContainer("#nested-app-vue3-container", {
-      timeout: 2000, // 缩短超时时间，因为容器应该已经准备好了
-      useObserver: true,
-      waitForVisible: true, // 确保容器可见
-    });
-
-    appVue3Instance = loadMicroApp({
-      name: "app-vue3",
-      entry: "//localhost:7400",
-      container: "#nested-app-vue3-container",
-      props: {
-        // 传递路由 base 配置给 app-vue3
-        routerBase: "/main-vue3/app-vue2/app-vue3",
-        // 传递父应用标识，用于更精确的 base 判断
-        parentApp: "main-vue3",
-      } as QiankunProps,
-    });
-  } catch (error) {
-    // eslint-disable-next-line no-console
-    console.warn("[main-vue3] app-vue3 容器未准备好:", error);
-  }
-};
-
-const unmountAppVue3 = () => {
-  if (appVue3Instance) {
-    appVue3Instance.unmount().then(() => {
-      appVue3Instance = null;
-    });
-  }
-};
-
-// 路由变化：离开 app-vue2 区域时卸载 app3
+// 路由监听：离开 app-vue2 区域时卸载 app3
 router.afterEach((to) => {
   const path = to.path;
   if (!path.startsWith("/app-vue2")) {
