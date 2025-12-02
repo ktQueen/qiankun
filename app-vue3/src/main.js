@@ -1,13 +1,14 @@
 import { createApp } from "vue";
 import ElementPlus from "element-plus";
 import "element-plus/dist/index.css";
-import router from "./router";
+import { createAppRouter } from "./router";
 import App from "./App.vue";
 
 let app = null;
+let router = null;
 
 function render(props = {}) {
-  const { container } = props;
+  const { container, routerBase } = props;
   const mountPoint = container || document.getElementById("app");
 
   if (!mountPoint) {
@@ -19,6 +20,14 @@ function render(props = {}) {
   if (app) {
     app.unmount();
     app = null;
+  }
+
+  // 如果传递了 routerBase，重新创建 router 实例
+  if (routerBase) {
+    router = createAppRouter(routerBase);
+  } else if (!router) {
+    // 首次创建，使用默认配置
+    router = createAppRouter();
   }
 
   const appInstance = createApp(App);

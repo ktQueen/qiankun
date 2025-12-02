@@ -2,8 +2,15 @@ import Vue from "vue";
 import ElementUI from "element-ui";
 import "element-ui/lib/theme-chalk/index.css";
 import { loadMicroApp, start } from "qiankun";
-import router from "./router";
+import { createRouter } from "./router";
 import App from "./App.vue";
+import { waitForContainer } from "./utils/container";
+
+// 创建默认 router（独立运行时使用）
+// eslint-disable-next-line no-underscore-dangle
+let router = createRouter(
+  window.__POWERED_BY_QIANKUN__ ? "/main-vue3/app-vue2" : "/app-vue2"
+);
 
 Vue.config.productionTip = false;
 Vue.use(ElementUI);
@@ -11,10 +18,16 @@ Vue.use(ElementUI);
 let instance = null;
 
 function render(props = {}) {
-  const { container } = props;
+  const { container, onContainerReady, routerBase } = props;
+
+  // 如果传递了 routerBase，重新创建 router 实例
+  if (routerBase) {
+    router = createRouter(routerBase);
+  }
+
   instance = new Vue({
     router,
-    render: (h) => h(App),
+    render: (h) => h(App, { props: { onContainerReady } }),
   }).$mount(container ? container.querySelector("#app") : "#app");
 }
 
@@ -47,25 +60,29 @@ if (!window.__POWERED_BY_QIANKUN__) {
 
   start({ singular: false });
 
-  const mountAppVue3 = (attempt = 0) => {
-    const container = document.getElementById("nested-app-vue3-container");
-    if (!container) {
-      if (attempt < 20) {
-        // 等待 DOM 渲染完成后再重试
-        setTimeout(() => mountAppVue3(attempt + 1), 50);
-      } else {
-        // eslint-disable-next-line no-console
-        console.warn("[app-vue2] app-vue3 容器始终未准备好");
-      }
-      return;
-    }
+  const mountAppVue3 = async () => {
     if (appVue3Instance) return;
 
-    appVue3Instance = loadMicroApp({
-      name: "app-vue3",
-      entry: "//localhost:7400",
-      container: "#nested-app-vue3-container",
-    });
+    try {
+      // 使用工具函数等待容器准备就绪
+      await waitForContainer("#nested-app-vue3-container", {
+        timeout: 5000,
+        useObserver: true,
+      });
+
+      appVue3Instance = loadMicroApp({
+        name: "app-vue3",
+        entry: "//localhost:7400",
+        container: "#nested-app-vue3-container",
+        props: {
+          // 传递路由 base 配置给 app-vue3（独立运行时）
+          routerBase: "/app-vue2/app-vue3",
+        },
+      });
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.warn("[app-vue2] app-vue3 容器未准备好:", error);
+    }
   };
 
   const unmountAppVue3 = () => {

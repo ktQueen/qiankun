@@ -22,6 +22,13 @@
 <script>
 export default {
   name: "AppVue2",
+  props: {
+    // 从 main-vue3 传递过来的容器准备就绪回调函数
+    onContainerReady: {
+      type: Function,
+      default: null,
+    },
+  },
   computed: {
     isQiankun() {
       // eslint-disable-next-line no-underscore-dangle
@@ -38,16 +45,7 @@ export default {
     showNestedContainer(val) {
       if (this.isQiankun && val) {
         this.$nextTick(() => {
-          const container = document.getElementById(
-            "nested-app-vue3-container"
-          );
-          if (container) {
-            window.dispatchEvent(
-              new CustomEvent("app-vue2-container-ready", {
-                detail: { containerId: "nested-app-vue3-container" },
-              })
-            );
-          }
+          this.notifyContainerReady();
         });
       }
     },
@@ -55,15 +53,25 @@ export default {
   mounted() {
     // 首次进入时如果就是 /app-vue2/app-vue3，需要主动通知一次
     if (this.isQiankun && this.showNestedContainer) {
-      const container = document.getElementById("nested-app-vue3-container");
-      if (container) {
-        window.dispatchEvent(
-          new CustomEvent("app-vue2-container-ready", {
-            detail: { containerId: "nested-app-vue3-container" },
-          })
-        );
-      }
+      this.$nextTick(() => {
+        this.notifyContainerReady();
+      });
     }
+  },
+  methods: {
+    // 通知容器已准备好（使用 props 回调替代 CustomEvent）
+    // 注意：独立运行时不需要这个通知，因为 app-vue2 的 main.js 通过 router.afterEach 直接处理
+    notifyContainerReady() {
+      const container = document.getElementById("nested-app-vue3-container");
+      if (
+        container &&
+        this.onContainerReady &&
+        typeof this.onContainerReady === "function"
+      ) {
+        // 在 main 中运行时，通过 props 回调通知主应用
+        this.onContainerReady("nested-app-vue3-container");
+      }
+    },
   },
 };
 </script>
