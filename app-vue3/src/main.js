@@ -8,7 +8,7 @@ let app = null;
 let router = null;
 
 function render(props = {}) {
-  const { container, routerBase } = props;
+  const { container, routerBase, parentApp } = props;
   const mountPoint = container || document.getElementById("app");
 
   if (!mountPoint) {
@@ -22,12 +22,10 @@ function render(props = {}) {
     app = null;
   }
 
-  // 如果传递了 routerBase，重新创建 router 实例
-  if (routerBase) {
-    router = createAppRouter(routerBase);
-  } else if (!router) {
-    // 首次创建，使用默认配置
-    router = createAppRouter();
+  // 如果传递了 routerBase 或 parentApp，重新创建 router 实例
+  // 使用统一的 base 判断工具函数
+  if (routerBase || parentApp || !router) {
+    router = createAppRouter(routerBase, parentApp);
   }
 
   const appInstance = createApp(App);

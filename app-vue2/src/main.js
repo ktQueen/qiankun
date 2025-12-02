@@ -6,11 +6,8 @@ import { createRouter } from "./router";
 import App from "./App.vue";
 import { waitForContainer } from "./utils/container";
 
-// 创建默认 router（独立运行时使用）
-// eslint-disable-next-line no-underscore-dangle
-let router = createRouter(
-  window.__POWERED_BY_QIANKUN__ ? "/main-vue3/app-vue2" : "/app-vue2"
-);
+// 创建默认 router（使用工具函数统一判断）
+let router = createRouter();
 
 Vue.config.productionTip = false;
 Vue.use(ElementUI);
@@ -78,6 +75,8 @@ if (!window.__POWERED_BY_QIANKUN__) {
         props: {
           // 传递路由 base 配置给 app-vue3（独立运行时）
           routerBase: "/app-vue2/app-vue3",
+          // 传递父应用标识，用于更精确的 base 判断
+          parentApp: "app-vue2",
         },
       });
     } catch (error) {

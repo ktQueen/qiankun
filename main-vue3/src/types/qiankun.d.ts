@@ -17,6 +17,12 @@ export interface QiankunProps {
    * 用于动态设置子应用的 router base
    */
   routerBase?: string;
+
+  /**
+   * 父应用标识
+   * 用于更精确地判断运行环境（"main-vue3" | "app-vue2"）
+   */
+  parentApp?: string;
 }
 
 /**

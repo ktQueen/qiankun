@@ -44,6 +44,8 @@ registerMicroApps([
       onContainerReady: handleAppVue3ContainerReady,
       // 传递路由 base 配置
       routerBase: "/main-vue3/app-vue2",
+      // 传递父应用标识，用于更精确的 base 判断
+      parentApp: "main-vue3",
     } as QiankunProps,
   },
 ]);
@@ -70,6 +72,8 @@ const mountAppVue3 = async () => {
       props: {
         // 传递路由 base 配置给 app-vue3
         routerBase: "/main-vue3/app-vue2/app-vue3",
+        // 传递父应用标识，用于更精确的 base 判断
+        parentApp: "main-vue3",
       } as QiankunProps,
     });
   } catch (error) {

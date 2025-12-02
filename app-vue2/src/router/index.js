@@ -3,6 +3,7 @@ import VueRouter from "vue-router";
 import Page1 from "../views/Page1.vue";
 import Page2 from "../views/Page2.vue";
 import Page3 from "../views/Page3.vue";
+import { getAppVue2RouterBase } from "../utils/router-base";
 
 Vue.use(VueRouter);
 
@@ -19,28 +20,20 @@ const routes = [
 
 /**
  * 创建 router 实例
- * @param {string} base - 路由 base，如果未提供则根据运行环境自动判断
+ * @param {string} routerBase - 路由 base，如果未提供则根据运行环境自动判断
  * @returns {VueRouter} router 实例
  */
-export function createRouter(base) {
-  // 如果没有提供 base，则根据运行环境自动判断
-  // eslint-disable-next-line no-underscore-dangle
-  const routerBase =
-    base ||
-    (window.__POWERED_BY_QIANKUN__ ? "/main-vue3/app-vue2" : "/app-vue2");
+export function createRouter(routerBase) {
+  const base = getAppVue2RouterBase(routerBase);
 
   return new VueRouter({
     mode: "history",
-    base: routerBase,
+    base,
     routes,
   });
 }
 
 // 默认导出：根据运行环境创建 router
-// eslint-disable-next-line no-underscore-dangle
-const defaultBase = window.__POWERED_BY_QIANKUN__
-  ? "/main-vue3/app-vue2"
-  : "/app-vue2";
-const router = createRouter(defaultBase);
+const router = createRouter();
 
 export default router;
