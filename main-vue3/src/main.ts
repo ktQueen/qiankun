@@ -241,7 +241,7 @@ start({ singular: false });
  * - 用户体验：首次进入 app3 时，加载时间从「下载 + 解析」变成「仅解析」，快很多
  */
 prefetchMicroApps([
-  { name: "app-vue2", entry: "//localhost:7200" },
+  // { name: "app-vue2", entry: "//localhost:7200" },
   {
     name: "app-vue3",
     entry: "//localhost:7400",
