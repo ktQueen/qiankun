@@ -5,6 +5,7 @@ import { registerMicroApps, start, loadMicroApp, MicroApp } from "qiankun";
 import router from "./router";
 import App from "./App.vue";
 import { waitForContainer } from "./utils/container";
+import { prefetchMicroApps } from "./utils/prefetch";
 import type { QiankunProps } from "./types/qiankun";
 
 /**
@@ -220,3 +221,28 @@ router.afterEach((to) => {
 
 // 启动 qiankun，允许多个微应用同时激活（singular: false）
 start({ singular: false });
+
+/**
+ * 预加载策略：提前下载 app-vue3 的资源，但不挂载
+ *
+ * 为什么预加载 app-vue3：
+ * - app-vue3 是嵌套在 app-vue2 内部的第 3 级应用
+ * - 用户进入 /app-vue2/... 后，很可能下一步就会进入 /app-vue2/app-vue3/...
+ * - 提前预加载可以显著减少首次进入 app3 的等待时间
+ *
+ * 预加载时机：
+ * - 在 start() 之后立即开始（延迟 500ms 确保 start 完成）
+ * - 此时用户可能还在浏览 main 的首页，或者刚进入 app2
+ * - 在用户真正需要 app3 之前，资源已经在浏览器缓存中了
+ *
+ * 性能影响：
+ * - 带宽：会提前下载 app3 的 HTML/JS/CSS（通常几百 KB 到几 MB）
+ * - CPU/内存：几乎无影响（只下载，不执行）
+ * - 用户体验：首次进入 app3 时，加载时间从「下载 + 解析」变成「仅解析」，快很多
+ */
+prefetchMicroApps([
+  {
+    name: "app-vue3",
+    entry: "//localhost:7400",
+  },
+]);

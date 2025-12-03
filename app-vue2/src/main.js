@@ -5,6 +5,7 @@ import { loadMicroApp, start } from "qiankun";
 import { createRouter } from "./router";
 import App from "./App.vue";
 import { waitForContainer } from "./utils/container";
+import { prefetchMicroApps } from "./utils/prefetch";
 
 /**
  * app-vue2 是一个既能独立运行、又能被 main-vue3 聚合的 Vue2 应用
@@ -93,6 +94,26 @@ if (!window.__POWERED_BY_QIANKUN__) {
 
   // 独立模式下也可以启用 qiankun 的运行时（只是不注册自己）
   start({ singular: false });
+
+  /**
+   * 预加载策略：提前下载 app-vue3 的资源（独立运行模式）
+   *
+   * 为什么预加载：
+   * - 在 app2 独立运行时，用户可能会进入 /app-vue3/... 路由
+   * - 提前预加载 app3 的资源，可以显著减少首次进入的等待时间
+   * - 用户从 /app-vue2/page1 切到 /app-vue2/app-vue3/page1 时，资源已经在缓存中
+   *
+   * 预加载时机：
+   * - 在 start() 之后立即开始（延迟 500ms 确保 start 完成）
+   * - 此时用户可能还在浏览 app2 的其他页面
+   * - 在用户真正需要 app3 之前，资源已经在浏览器缓存中了
+   */
+  prefetchMicroApps([
+    {
+      name: "app-vue3",
+      entry: "//localhost:7400",
+    },
+  ]);
 
   /**
    * 在 app2 独立模式下挂载 app3
