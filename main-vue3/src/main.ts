@@ -88,33 +88,90 @@ registerMicroApps([
 let appVue3Instance: MicroApp | null = null;
 
 /**
- * 挂载 app-vue3（如果还没有实例）
+ * 内部工具：显示 app3 容器（用于缓存/隐藏策略）
+ */
+const showAppVue3Container = () => {
+  const container = document.querySelector(
+    "#nested-app-vue3-container"
+  ) as HTMLElement | null;
+  if (container && container.style.display === "none") {
+    // 还原为默认显示，由样式控制具体布局
+    container.style.display = "";
+  }
+};
+
+/**
+ * 内部工具：隐藏 app3 容器（但不销毁实例）
+ * - 用于在 main 中从 /app-vue2/app-vue3/... 切回 /app-vue2/page1 这类场景
+ */
+const hideAppVue3Container = () => {
+  const container = document.querySelector(
+    "#nested-app-vue3-container"
+  ) as HTMLElement | null;
+  if (container && container.style.display !== "none") {
+    container.style.display = "none";
+  }
+};
+
+/**
+ * 检查容器是否有有效内容（用于判断是否需要重新挂载）
+ * - 如果容器是空的，说明之前的实例可能已经丢失了挂载点
+ */
+const isContainerEmpty = (container: HTMLElement): boolean => {
+  // 检查容器是否有子节点（app3 挂载后会创建子节点）
+  // 如果容器是空的，说明需要重新挂载
+  return container.children.length === 0;
+};
+
+/**
+ * 挂载 app-vue3（支持缓存复用 + 自动恢复）
+ *
+ * 策略：
+ * 1. 如果已有实例且容器有内容：直接显示容器（缓存复用）
+ * 2. 如果已有实例但容器为空：说明实例丢失了挂载点，需要重新挂载
+ * 3. 如果没有实例：首次挂载
  */
 const mountAppVue3 = async () => {
-  // 已经有实例就不重复挂载
-  if (appVue3Instance) return;
-
   try {
-    // 再次确认容器存在且可见（多一层保险）
-    await waitForContainer("#nested-app-vue3-container", {
-      timeout: 2000, // 容器理论上已经准备好，超时时间可以短一点
+    // 确保容器存在且可见
+    const container = (await waitForContainer("#nested-app-vue3-container", {
+      timeout: 2000,
       useObserver: true,
-      waitForVisible: true, // 确保不是 display:none
-    });
+      waitForVisible: true,
+    })) as HTMLElement;
 
-    // 手动加载 app-vue3 微应用
+    // 如果已有实例，检查容器是否有内容
+    if (appVue3Instance) {
+      // 检查容器是否为空（可能因为 app2 路由切换导致内容被清空）
+      if (isContainerEmpty(container)) {
+        // 容器为空，说明实例丢失了挂载点，需要重新挂载
+        // eslint-disable-next-line no-console
+        console.log("[main-vue3] 检测到容器为空，重新挂载 app-vue3");
+        // 先销毁旧实例
+        await appVue3Instance.unmount();
+        appVue3Instance = null;
+        // 继续执行下面的挂载逻辑
+      } else {
+        // 容器有内容，直接显示即可（缓存复用）
+        showAppVue3Container();
+        return;
+      }
+    }
+
+    // 首次挂载或重新挂载
     appVue3Instance = loadMicroApp({
       name: "app-vue3",
       entry: "//localhost:7400",
       container: "#nested-app-vue3-container",
       props: {
-        // 告诉 app3：在 main 中挂载时的 history base
         routerBase: "/main-vue3/app-vue2/app-vue3",
         parentApp: "main-vue3",
       } as QiankunProps,
     });
+
+    // 新实例挂载完成后，确保容器是可见的
+    showAppVue3Container();
   } catch (error) {
-    // 一般是容器在超时时间内没有准备好
     // eslint-disable-next-line no-console
     console.warn("[main-vue3] app-vue3 容器未准备好:", error);
   }
@@ -124,11 +181,10 @@ const mountAppVue3 = async () => {
  * 卸载 app-vue3 实例
  *
  * 当前策略：
- * - 一旦确认「路由不在 app3 占位路由下」就彻底 unmount
- * - 好处：逻辑简单、状态干净
- * - 后续你如果想要缓存复用，可以在这里做成「隐藏而不是卸载」
+ * - 完全销毁实例（用于「真正离开 app2」的场景）
+ * - 与之对比，hideAppVue3Container 只隐藏 DOM，不销毁实例（缓存复用）
  */
-const unmountAppVue3 = () => {
+const destroyAppVue3 = () => {
   if (appVue3Instance) {
     appVue3Instance.unmount().then(() => {
       appVue3Instance = null;
@@ -140,13 +196,25 @@ const unmountAppVue3 = () => {
  * 路由守卫：离开 app3 对应的占位路由时卸载 app3
  *
  * 注意：
- * - main 自己的路由里，app3 的占位路由写的是 /app-vue2/app-vue3/xxx
- * - 所以只要 to.path 不以这个前缀开头，就认为已经离开 app3 区域
+ * - main 自己的路由里：
+ *   - app2 占位：/app-vue2/...
+ *   - app3 占位：/app-vue2/app-vue3/...
+ * - 策略：
+ *   - 仍在 /app-vue2/app-vue3/...：保持 app3 挂载且容器可见（由挂载逻辑控制）
+ *   - 在 /app-vue2/... 但不在 /app-vue2/app-vue3/...：只隐藏容器，保留实例（缓存）
+ *   - 完全离开 /app-vue2/...：彻底销毁 app3 实例
  */
 router.afterEach((to) => {
   const path = to.path;
-  if (!path.startsWith("/app-vue2/app-vue3")) {
-    unmountAppVue3();
+  if (path.startsWith("/app-vue2/app-vue3")) {
+    // 在 app3 区域：不做额外处理，挂载流程由 onContainerReady + mountAppVue3 控制
+    showAppVue3Container();
+  } else if (path.startsWith("/app-vue2")) {
+    // 仍在 app2 内，但不在 app3 占位路由：只隐藏 app3（缓存实例）
+    hideAppVue3Container();
+  } else {
+    // 完全离开 app2：彻底销毁 app3 实例
+    destroyAppVue3();
   }
 });
 

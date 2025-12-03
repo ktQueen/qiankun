@@ -10,9 +10,16 @@
 
     <router-view />
 
-    <!-- app-vue3 的容器 -->
+    <!-- app-vue3 的容器
+         注意：
+         - 在 qiankun 模式下（挂在 main 里），容器需要一直存在，方便 main 做缓存/隐藏
+         - 在独立模式下，只有在 /app-vue3/... 路由下才需要显示容器
+         因此这里用 v-show + containerVisible 控制：
+         - isQiankun === true  时：始终渲染容器，交给主应用控制 display
+         - isQiankun === false 时：根据 showNestedContainer 决定是否显示
+    -->
     <div
-      v-if="showNestedContainer"
+      v-show="containerVisible"
       id="nested-app-vue3-container"
       class="nested-vue3"
     ></div>
@@ -42,6 +49,13 @@ export default {
       // 因为 base 已经处理了前缀，所以这里只需要判断相对路径
       return path.startsWith("/app-vue3");
     },
+    // 容器是否可见：
+    // - 在 qiankun 模式下：始终为 true（容器一直存在，交给 main 控制显示/隐藏）
+    // - 在独立模式下：只在 app3 路由下显示（/app-vue3/...）
+    containerVisible() {
+      if (this.isQiankun) return true;
+      return this.showNestedContainer;
+    },
   },
   data() {
     return {
@@ -63,8 +77,26 @@ export default {
           this.notifyContainerReady();
         }, 100);
       } else if (!val) {
-        // 容器隐藏时重置标记
+        // 容器隐藏时重置标记（但容器本身不会被删除，因为 containerVisible 在 qiankun 模式下始终为 true）
         this.hasNotified = false;
+      }
+    },
+    // 监听路由变化，确保在 qiankun 模式下容器始终存在
+    // 当路由切换时，如果容器被意外清空，需要重新通知 main
+    "$route"(to, from) {
+      if (this.isQiankun) {
+        // 在 qiankun 模式下，容器应该始终存在（containerVisible 为 true）
+        // 如果从 app3 路由切到其他路由，再切回来，需要重新通知 main
+        // 因为 main 会检查容器内容，如果为空会重新挂载
+        if (to.path.startsWith("/app-vue3") && !from.path.startsWith("/app-vue3")) {
+          // 从非 app3 路由切回 app3 路由，重新通知（让 main 检查并恢复）
+          this.hasNotified = false;
+          this.$nextTick(() => {
+            setTimeout(() => {
+              this.notifyContainerReady();
+            }, 100);
+          });
+        }
       }
     },
   },
