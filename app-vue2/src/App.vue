@@ -83,12 +83,15 @@ export default {
     },
     // 监听路由变化，确保在 qiankun 模式下容器始终存在
     // 当路由切换时，如果容器被意外清空，需要重新通知 main
-    "$route"(to, from) {
+    $route(to, from) {
       if (this.isQiankun) {
         // 在 qiankun 模式下，容器应该始终存在（containerVisible 为 true）
         // 如果从 app3 路由切到其他路由，再切回来，需要重新通知 main
         // 因为 main 会检查容器内容，如果为空会重新挂载
-        if (to.path.startsWith("/app-vue3") && !from.path.startsWith("/app-vue3")) {
+        if (
+          to.path.startsWith("/app-vue3") &&
+          !from.path.startsWith("/app-vue3")
+        ) {
           // 从非 app3 路由切回 app3 路由，重新通知（让 main 检查并恢复）
           this.hasNotified = false;
           this.$nextTick(() => {
