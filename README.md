@@ -18,6 +18,7 @@
 ## 目录结构（核心部分）
 
 - `main-vue3/`：主应用（Vue3 + Vite）
+
   - `src/main.ts`：注册子应用、挂载 app-vue3、路由守卫、预加载等核心逻辑
   - `src/router/index.ts`：主应用路由（占位 app2 / app3）
   - `src/App.vue`：主应用布局与子应用容器 `#subapp-container`
@@ -26,6 +27,7 @@
   - `src/types/qiankun.d.ts`：qiankun 相关 props 类型定义
 
 - `app-vue2/`：一级 Vue2 子应用
+
   - `src/main.js`：qiankun 生命周期 + 独立模式下挂载 app3
   - `src/router/index.js`：只写「相对 path」的业务路由，base 由工具统一计算
   - `src/App.vue`：内嵌 app3 的容器 `#nested-app-vue3-container` + 容器就绪通知
@@ -59,15 +61,15 @@
 
 **main 自己的页面**
 
-- `/main-vue3/` → main 首页  
-- `/main-vue3/page1` → main Page1  
-- `/main-vue3/page2` → main Page2  
+- `/main-vue3/` → main 首页
+- `/main-vue3/page1` → main Page1
+- `/main-vue3/page2` → main Page2
 
 **main 里的 app2 / app3 占位路由**
 
-- `/main-vue3/app-vue2/page1` → app2 Page1（内容由 app2 渲染）  
-- `/main-vue3/app-vue2/page2` → app2 Page2  
-- `/main-vue3/app-vue2/app-vue3/page1` → app3 Page1（内容由 app3 渲染）  
+- `/main-vue3/app-vue2/page1` → app2 Page1（内容由 app2 渲染）
+- `/main-vue3/app-vue2/page2` → app2 Page2
+- `/main-vue3/app-vue2/app-vue3/page1` → app3 Page1（内容由 app3 渲染）
 
 > 注意：main 的 `router/index.ts` 里只做「占位」，真正的内容由 qiankun 子应用渲染。
 
@@ -256,18 +258,22 @@ qiankun 在这方面更像「**单页 + 多 entry**」的模式，比 iframe 更
 ## 四、如果你以后从零搭类似架构，可以按这几个步骤走
 
 1. **选主应用（Shell）**
+
    - 用它来跑 qiankun 的 `registerMicroApps + start`；
    - 用它来独占真实 URL（history base）。
 
 2. **确定 URL 规则**
+
    - 先画出类似本 README 第 1 部分的「base + 相对 path」表；
    - 明确：**哪一层控制真实 URL，哪一层只控制相对 path**。
 
 3. **为每个子应用设计 router-base 工具**
+
    - 输入：`routerBase`（props）+ `parentApp` + 环境变量；
    - 输出：该应用在当前模式下的 base。
 
 4. **容器与生命周期**
+
    - 子应用：渲染容器（`#subapp-container` / `#nested-app-vue3-container`），并在合适时机通过 props 告知父应用「容器已就绪」；
    - 父应用：在回调里用 `waitForContainer + loadMicroApp` 挂载微应用；
    - 需要缓存时：只隐藏容器，不轻易销毁实例，必要时通过 DOM 内容检查自动恢复。
@@ -282,5 +288,3 @@ qiankun 在这方面更像「**单页 + 多 entry**」的模式，比 iframe 更
 - 谁负责挂载谁；
 - 容器在哪一层渲染；
 - 什么时候该 mount / hide / destroy / prefetch。
-
-
